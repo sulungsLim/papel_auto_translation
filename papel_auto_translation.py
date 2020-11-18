@@ -7,9 +7,10 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 import time
 import requests
+import random
 import pandas as pd
 import timeit
-
+import re
 
 class translation:
 
@@ -21,22 +22,38 @@ class translation:
 
         name = path.split("/")[-1]
         paper = self.read_pdf_PDFMINER(path)
-        paper = paper.replace("\n","")
-        #paper = paper.replace("-
+        paper = paper.replace("\n","").replace("e.g.","for example,").replace("i.e.","that is,").replace("Fig.","Fig").replace(".",". ")
+        paper = re.sub('([0-9]+)(. )([0-9]+)', '\\1.\\3',paper)
 
-        paper_list = paper.split(".")
+        ## 숫자 처리를 못하겠다
+
+        paper = paper.replace("Abstract", "Abstract. ").replace("Introduction", "Introduction. ").replace(
+            "Related Work", "Related Work. ").replace("Conclusions", "Conclusions. ").replace("References",
+                                                                                              "References. ")
+
+        #paper = re.sub('([1-9])+(. )([A-Za-z])+','\\1.\\3', paper)
+
+        ## 아니 이거 왜안되는지 모르곘음
+
+                #paper = paper.replace("-
+
+
+        paper_list = paper.split(". ")
+        print(paper_list[0])
         pp = []
 
 
 
-
         for a in range(len(paper_list)):
+
             if a % 2 == 0:
                 #if paper_list[a][-1] in '0123456789' and paper_list[a + 1][0] in '0123456789':
                 #    paper_list[a] = paper_list[a]+'.' + paper_list[a+1]
                 #else :
-                paper_list[a] = paper_list[a] + '. ' + paper_list[a + 1]
-                paper_list[a+1] = ''
+                try:
+                    paper_list[a] = paper_list[a] + '. ' + paper_list[a + 1]
+                    paper_list[a+1] = ''
+                except:pass
 
         while True:
             try:
@@ -74,8 +91,6 @@ class translation:
                     pass
 
 
-
-
         eng_df = pd.DataFrame(self.eng_list)
         kor_df = pd.DataFrame(self.kor_list)
         db_df = pd.DataFrame(self.double_list)
@@ -95,7 +110,7 @@ class translation:
         self.double_list.append(kor)
 
         print(kor)
-        time.sleep(0.5)
+        time.sleep(random.uniform(0.5, 1))
         if len(self.eng_list) % 10 == 0:
             time.sleep(1)
 
@@ -148,7 +163,7 @@ class translation:
 
 
 if __name__ == "__main__":
-    translation('C:/Users/user/Documents/attention-is-all-you-need.pdf.pdf')
+    translation('C:/Users/user/Documents/Temporal Fusion Transformers for Interpretable Multi-horizon Time Series Forecasting.pdf')
 
 
 
