@@ -8,6 +8,7 @@ from pdfminer.pdfparser import PDFParser
 import time
 import requests
 import pandas as pd
+import timeit
 
 
 class translation:
@@ -17,33 +18,67 @@ class translation:
         path : 경로 넣어주자
 
         '''
-        print("코로나 조심해")
-        name = path.split("/")[-2]
+
+        name = path.split("/")[-1]
         paper = self.read_pdf_PDFMINER(path)
         paper = paper.replace("\n","")
-        paper = paper.replace("-", "")
+        #paper = paper.replace("-
+
         paper_list = paper.split(".")
-        eng_list = []
-        kor_list = []
-        double_list = []
+        pp = []
+
+
+
+
+        for a in range(len(paper_list)):
+            if a % 2 == 0:
+                #if paper_list[a][-1] in '0123456789' and paper_list[a + 1][0] in '0123456789':
+                #    paper_list[a] = paper_list[a]+'.' + paper_list[a+1]
+                #else :
+                paper_list[a] = paper_list[a] + '. ' + paper_list[a + 1]
+                paper_list[a+1] = ''
+
+        while True:
+            try:
+                paper_list.remove('')
+            except: break
+
+        self.eng_list = []
+        self.kor_list = []
+        self.double_list = []
+
+
         for sentence in paper_list:
             try:
-                eng = sentence
-                kor = self.kor2eng(sentence)
-                eng_list.append(eng)
-                kor_list.append(kor)
-                double_list.append(eng)
-                double_list.append(kor)
-                print(eng)
-                print(kor)
-                if len(eng_list)%20 == 0:
-                    time.sleep(1)
-            except:
-                pass
 
-        eng_df = pd.DataFrame(eng_list)
-        kor_df = pd.DataFrame(kor_list)
-        db_df = pd.DataFrame(double_list)
+                print(sentence)
+                self.translate_eng_kor(sentence)
+
+            except Exception as ex:
+                print(ex)
+                ex = str(ex)
+                if 'Expecting value' in ex:
+                    time.sleep(1.5)
+                    start_time = timeit.default_timer()
+                    while True:
+                        try:
+                            time.sleep(1.5)
+                            self.translate_eng_kor(sentence)
+                            break_time = timeit.default_timer()
+                            print(" 빠져나오는데 걸린 시간 :",start_time-break_time)
+
+                            break
+                        except:
+                            pass
+                else:
+                    pass
+
+
+
+
+        eng_df = pd.DataFrame(self.eng_list)
+        kor_df = pd.DataFrame(self.kor_list)
+        db_df = pd.DataFrame(self.double_list)
         df_axis1 = pd.concat([eng_df, kor_df], axis=1)  # column bind
         db_df.to_csv('%s_번역한줄씩.txt'%(name),index=False, header=None)
         df_axis1.to_csv('%s_번역병렬.txt'%(name) ,index=False, header=None)
@@ -51,7 +86,18 @@ class translation:
         print(df_axis1)
         print(db_df)
 
+    def translate_eng_kor(self,sentence):
+        eng = sentence
+        kor = self.kor2eng(sentence)
+        self.eng_list.append(eng)
+        self.kor_list.append(kor)
+        self.double_list.append(eng)
+        self.double_list.append(kor)
 
+        print(kor)
+        time.sleep(0.5)
+        if len(self.eng_list) % 10 == 0:
+            time.sleep(1)
 
 
     def kor2eng(self,query):
@@ -102,7 +148,8 @@ class translation:
 
 
 if __name__ == "__main__":
-    translation('C:/Users/user/Documents/google-trend.pdf')
+    translation('C:/Users/user/Documents/attention-is-all-you-need.pdf.pdf')
+
 
 
 
